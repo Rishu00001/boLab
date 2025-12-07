@@ -2,11 +2,11 @@ import { Kalam } from "next/font/google";
 
 import ContentEditable, { ContentEditableEvent } from "react-contenteditable";
 
-import { cn } from "@/lib/utils";
+import { cn, getContrastingTextColor } from "@/lib/utils";
 
 import { colorToCss } from "@/lib/utils";
 
-import { TextLayer } from "@/types/canvas";
+import { NoteLayer } from "@/types/canvas";
 
 import { useMutation } from "@/liveblocks.config";
 
@@ -16,25 +16,25 @@ const kalam = Kalam({
 });
 const calculateFontSize = (width: number, height: number) => {
   const maxFontSize = 96;
-  const scaleFactor = 0.5;
+  const scaleFactor = 0.15;
   const fontSizeBasedOnHeight = height * scaleFactor;
   const fontSizeBasedOnWidth = width * scaleFactor;
 
-  return Math.min(fontSizeBasedOnHeight, fontSizeBasedOnWidth, maxFontSize);
+  return Math.min(fontSizeBasedOnWidth, fontSizeBasedOnHeight, maxFontSize);
 };
-interface TextProps {
+interface NoteProps {
   id: string;
-  layer: TextLayer;
+  layer: NoteLayer;
   onPointerDown: (e: React.PointerEvent, id: string) => void;
   selectionColor?: string;
 }
 
-export const Text = ({
+export const Note = ({
   id,
   layer,
   onPointerDown,
   selectionColor,
-}: TextProps) => {
+}: NoteProps) => {
   const { x, y, width, height, fill, value } = layer;
 
   const updateValue = useMutation(({ storage }, newValue: string) => {
@@ -54,18 +54,20 @@ export const Text = ({
       onPointerDown={(e) => onPointerDown(e, id)}
       style={{
         outline: selectionColor ? `1px solid ${selectionColor}` : "none",
+        backgroundColor : fill ? colorToCss(fill) : "#CCC",
       }}
+      className="shadow-md drop-shadow-xl"
     >
       <ContentEditable
         className={cn(
-          "h-full w-full flex items-center justify-center flex-col drop-shadow-md outline-none",
+          "h-full w-full flex items-center justify-center flex-col outline-none",
           kalam.className
         )}
         style={{
-          color: fill ? colorToCss(fill) : "000",
+          color: fill ? getContrastingTextColor(fill) : "#000",
           fontSize: calculateFontSize(width, height),
         }}
-        html={value || "Text Here"}
+        html={value || ""}
         onChange={handleContentChange}
       ></ContentEditable>
     </foreignObject>

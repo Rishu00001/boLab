@@ -1,4 +1,13 @@
-import { Camera, Color, Layer, Point, Side, XYWH } from "@/types/canvas";
+import {
+  Camera,
+  Color,
+  Layer,
+  LayerType,
+  PathLayer,
+  Point,
+  Side,
+  XYWH,
+} from "@/types/canvas";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -94,4 +103,67 @@ export function findIntersectingLayersWithRectangle(
   }
 
   return ids;
+}
+
+export function getContrastingTextColor(color: Color): "black" | "white" {
+  // Calculate relative luminance
+  const { r, g, b } = color;
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+  // If luminance is high (light color), return black; else white
+  return luminance > 0.5 ? "black" : "white";
+}
+
+export function penPointsToPathLayer(
+  points: number[][],
+  color: Color
+): PathLayer {
+  if (points.length < 2) {
+    throw new Error("Can not transform");
+  }
+  let left = Number.POSITIVE_INFINITY;
+  let top = Number.POSITIVE_INFINITY;
+  let right = Number.NEGATIVE_INFINITY;
+  let bottom = Number.NEGATIVE_INFINITY;
+
+  for (const point of points) {
+    const [x, y] = point;
+    if (left > x) {
+      left = x;
+    }
+    if (top > y) {
+      top = y;
+    }
+    if (right < x) {
+      right = x;
+    }
+    if (bottom < y) {
+      bottom = y;
+    }
+  }
+  return {
+    type: LayerType.Path,
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top,
+    fill: color,
+    points: points.map(([x, y, pressure]) => [x - left, y - top, pressure]),
+  };
+}
+
+export function getSvgPathFromStroke(stroke: number[][]) {
+  if (!stroke.length) return "";
+
+  let d = `M${stroke[0][0].toFixed(2)},${stroke[0][1].toFixed(2)} Q`;
+
+  for (let i = 1; i < stroke.length; i++) {
+    const [x0, y0] = stroke[i];
+    const [x1, y1] = stroke[i - 1];
+    const mx = (x1 + x0) / 2;
+    const my = (y1 + y0) / 2;
+    d += `${x1.toFixed(2)},${y1.toFixed(2)} ${mx.toFixed(2)},${my.toFixed(2)} `;
+  }
+
+  return d + "Z";
 }

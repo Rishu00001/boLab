@@ -44,7 +44,9 @@ declare global {
     Presence: {
       // Example:
       cursor?: { x: number; y: number } | null,
-      selection : string[]
+      selection : string[],
+      pencilDraft : [x : number , y : number , pressure : number][] | null,
+      penColor : Color | null;
     };
 
     Storage: {
